@@ -3,20 +3,19 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 namespace TCPChatClient
 {
     public partial class ClientForm : Form
     {
         private TcpClient client;
-        private SslStream sslStream;
+        private NetworkStream stream;
         private Thread thread;
         private bool isConnected = false;
         private bool isClosingByButton = false;
         private string nickname;
 
+        // Danh sách emoji Unicode
         private readonly string[] emojis = new string[]
         {
             "\U0001F600", // 😀
@@ -34,30 +33,32 @@ namespace TCPChatClient
         private void ConnectButton_Click(object sender, EventArgs e)
         {
             client = new TcpClient();
-            client.Connect("127.0.0.1", 8888);
-            NetworkStream stream = client.GetStream();
-
-            X509Certificate2Collection certificates = new X509Certificate2Collection();
-            certificates.Add(new X509Certificate2(@"C:\Users\quocm\OneDrive\Desktop\Certificate\server.crt"));
-            sslStream = new SslStream(stream, false);
-            sslStream.AuthenticateAsClient("server_name", certificates, System.Security.Authentication.SslProtocols.Tls, false);
-
-            byte[] nicknameData = Encoding.UTF8.GetBytes(nickname);
-            sslStream.Write(nicknameData, 0, nicknameData.Length);
-            thread = new Thread(ReceiveMessages);
-            thread.Start();
-            isConnected = true;
-            UpdateConnectionStatus();
+            try
+            {
+                client.Connect("127.0.0.1", 8888);
+                stream = client.GetStream();
+                nickname = NicknameTextBox.Text;
+                byte[] nicknameData = Encoding.UTF8.GetBytes(nickname);
+                stream.Write(nicknameData, 0, nicknameData.Length);
+                thread = new Thread(ReceiveMessages);
+                thread.Start();
+                isConnected = true;
+                UpdateConnectionStatus();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to connect to server: " + ex.Message);
+            }
         }
 
         private void SendButton_Click(object sender, EventArgs e)
         {
-            if (isConnected && sslStream != null)
+            if (isConnected && stream != null)
             {
                 string message = MessageTextBox.Text;
                 byte[] messageData = Encoding.UTF8.GetBytes(message);
-                sslStream.Write(messageData, 0, messageData.Length);
-                sslStream.Flush();
+                stream.Write(messageData, 0, messageData.Length);
+                stream.Flush();
                 UpdateChatBox($"You: {message}");
                 MessageTextBox.Clear();
             }
@@ -69,13 +70,13 @@ namespace TCPChatClient
 
         private void ReceiveMessages()
         {
-            while (isConnected && sslStream != null)
+            while (isConnected && stream != null)
             {
                 byte[] data = new byte[4096];
                 int bytesRead = 0;
                 try
                 {
-                    bytesRead = sslStream.Read(data, 0, 4096);
+                    bytesRead = stream.Read(data, 0, 4096);
                 }
                 catch (Exception ex)
                 {
@@ -126,16 +127,20 @@ namespace TCPChatClient
 
         private void EmojiButton_Click(object sender, EventArgs e)
         {
+            // Kiểm tra xem danh sách emoji đã có sẵn chưa
             if (EmojiListBox.Items.Count == 0)
             {
+                // Nếu danh sách rỗng, thêm emoji vào danh sách
                 foreach (string emoji in emojis)
                 {
                     EmojiListBox.Items.Add(emoji);
                 }
             }
 
+            // Đảo ngược trạng thái hiển thị của danh sách emoji
             EmojiListBox.Visible = !EmojiListBox.Visible;
         }
+
 
         private void EmojiListBox_SelectedIndexChanged(object sender, EventArgs e)
         {

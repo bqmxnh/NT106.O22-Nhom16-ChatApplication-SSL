@@ -5,16 +5,18 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Security.Cryptography.X509Certificates;
-using System.Net.Security;
 
 namespace TCPChatServer
 {
     public partial class ServerForm : Form
     {
+        // Lắng nghe kết nối từ máy khách
         private TcpListener? listener;
+        // Danh sách clients
         private List<TcpClient> clients = new List<TcpClient>();
+        // Nickname của clients
         private Dictionary<TcpClient, string> clientNicknames = new Dictionary<TcpClient, string>();
+        // Form đóng bởi người dùng 
         private bool isClosingByButton = false;
 
         public ServerForm()
@@ -22,7 +24,7 @@ namespace TCPChatServer
             InitializeComponent();
             this.FormClosing += new FormClosingEventHandler(ServerForm_FormClosing);
         }
-
+        // Nhấn nút, khởi tạo TCP listener, lắng nghe  kết nối từ máy khách 
         private void StartServerButton_Click_1(object sender, EventArgs e)
         {
             IPAddress ip = IPAddress.Parse("127.0.0.1");
@@ -35,9 +37,8 @@ namespace TCPChatServer
             MessageBox.Show(serverStartedMessage);
             Thread acceptThread = new Thread(new ThreadStart(ListenForClients));
             acceptThread.Start();
-
         }
-
+        // Vòng lặp liên tục lắng nghe khết nối từ máy khác, mỗi khi có nết nối mới được chấp nhận,một luồng mới sẽ được tạo để xử lý kết nối đó (HandleClientComm).
         private void ListenForClients()
         {
             while (true && listener != null)
@@ -47,12 +48,13 @@ namespace TCPChatServer
                 Thread clientThread = new Thread(new ParameterizedThreadStart(HandleClientComm));
                 clientThread.Start(client);
             }
-
         }
 
+
+        // Xử lý việc giao tiếp với một máy khách cụ thể.
         private void HandleClientComm(object? client)
         {
-            if (client == null) return;
+            if (client == null) return; // Kiểm tra tránh trường hợp client null
             TcpClient tcpClient = (TcpClient)client;
             NetworkStream clientStream = tcpClient.GetStream();
 
@@ -62,11 +64,6 @@ namespace TCPChatServer
             clientNicknames.Add(tcpClient, nickname);
             UpdateStatus($"Client connected with nickname: {nickname}{Environment.NewLine}");
 
-            // SSL Configuration
-            X509Certificate2 serverCertificate = new X509Certificate2(@"C:\Users\quocm\OneDrive\Desktop\Certificate\certificate.pfx", "1234");
-            SslStream sslStream = new SslStream(tcpClient.GetStream(), false);
-            sslStream.AuthenticateAsServer(serverCertificate, false, System.Security.Authentication.SslProtocols.Tls, true);
-
             byte[] message = new byte[4096];
             int bytesRead;
 
@@ -75,7 +72,7 @@ namespace TCPChatServer
                 bytesRead = 0;
                 try
                 {
-                    bytesRead = sslStream.Read(message, 0, 4096);
+                    bytesRead = clientStream.Read(message, 0, 4096);
                 }
                 catch
                 {
@@ -95,8 +92,7 @@ namespace TCPChatServer
                 {
                     if (c != tcpClient)
                     {
-                        SslStream stream = new SslStream(c.GetStream(), false);
-                        stream.AuthenticateAsServer(serverCertificate, false, System.Security.Authentication.SslProtocols.Tls, true);
+                        NetworkStream stream = c.GetStream();
                         byte[] broadcastMessage = Encoding.UTF8.GetBytes(receivedMessage);
                         stream.Write(broadcastMessage, 0, broadcastMessage.Length);
                         stream.Flush();
@@ -107,8 +103,9 @@ namespace TCPChatServer
             clients.Remove(tcpClient);
             clientNicknames.Remove(tcpClient);
             tcpClient.Close();
-
         }
+
+
         // Gửi tin nhắn từ server đến tất cả client
         private void SendServerMessage(string message)
         {
@@ -120,8 +117,7 @@ namespace TCPChatServer
                 stream.Flush();
             }
         }
-        
-        
+
         // Sự kiện click cho nút gửi tin nhắn từ server đến client
         private void SendToClientsButton_Click(object sender, EventArgs e)
         {
@@ -132,8 +128,8 @@ namespace TCPChatServer
                 UpdateStatus($"Server sent message to all clients: {message}");
                 ServerMessageTextBox.Clear();
             }
-
         }
+        // Cập nhật nội dung 
         private void UpdateStatus(string message)
         {
             if (InvokeRequired)
@@ -145,9 +141,9 @@ namespace TCPChatServer
                 StatusTextBox.AppendText(message);
             else
                 StatusTextBox.AppendText(message + Environment.NewLine);
-
         }
 
+        // Xử lý khi người dùng đóng form.
         private void ServerForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
             isClosingByButton = e.CloseReason == CloseReason.UserClosing;
@@ -156,7 +152,6 @@ namespace TCPChatServer
                 Application.Exit();
                 Environment.Exit(0);
             }
-
         }
     }
 }
