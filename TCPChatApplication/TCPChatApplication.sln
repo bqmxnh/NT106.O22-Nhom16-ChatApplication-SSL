@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34622.214
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TCPChatServer", "TCPChatServer\TCPChatServer.csproj", "{FFFD002F-761C-415E-B092-47A559FB014E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCPChatClient", "TCPChatClient\TCPChatClient.csproj", "{C67E105A-4CF9-48B1-8EFA-9BBEB567823E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FFFD002F-761C-415E-B092-47A559FB014E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFFD002F-761C-415E-B092-47A559FB014E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFFD002F-761C-415E-B092-47A559FB014E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFFD002F-761C-415E-B092-47A559FB014E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C67E105A-4CF9-48B1-8EFA-9BBEB567823E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C67E105A-4CF9-48B1-8EFA-9BBEB567823E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C67E105A-4CF9-48B1-8EFA-9BBEB567823E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C67E105A-4CF9-48B1-8EFA-9BBEB567823E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C5EF9320-B05F-45F7-9E00-ACFDEBF85FF3}
+	EndGlobalSection
+EndGlobal
